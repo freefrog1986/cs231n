@@ -1,2 +1,5 @@
 # cs231n
-stanford 2019 cs231n course
+Stanford 2019 cs231n course assignments.
+
+## milestone
+02-07-2019: assignment1 knn classifier Finished.
