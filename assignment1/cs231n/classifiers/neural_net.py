@@ -80,7 +80,8 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        layer1_scores = np.maximum((X.dot(W1) + b1), 0)
+        scores = layer1_scores.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -98,7 +99,15 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        max_scores = np.max(scores, axis = 1).reshape(-1,1)
+        normalized_scores = scores - max_scores
+        softmax_scores = np.exp(normalized_scores) 
+        sum_scores =  np.sum(softmax_scores, axis = 1).reshape(-1,1)
+        softmax_scores /= sum_scores
+        loss = -np.sum(np.log(softmax_scores[range(N),y]))
+        loss /= N
+        loss += reg * np.sum(W1 * W1)
+        loss += reg * np.sum(W2 * W2)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -110,8 +119,28 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        softmax_scores[range(N),y] -= 1
+        dW2 = layer1_scores.T.dot(softmax_scores)
+        dW2 /= N
+        dW2 += 2 * reg * W2
+        
+        db2 = np.sum(softmax_scores, axis=0)
+        db2 /= N
 
-        pass
+        dh1 = np.dot(softmax_scores, W2.T)
+        dh1[layer1_scores == 0] = 0
+
+        dW1 = np.dot(X.T,dh1)
+        dW1 /= N
+        dW1 += 2 * reg * W1
+
+        db1 = np.sum(dh1,axis=0)
+        db1 /= N
+
+        grads['W2'] = dW2
+        grads['b2'] = db2
+        grads['W1'] = dW1
+        grads['b1'] = db1
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -156,7 +185,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            sample_index = np.random.choice(num_train, batch_size)
+            X_batch = X[sample_index,:]
+            y_batch = y[sample_index]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -171,8 +202,10 @@ class TwoLayerNet(object):
             # stored in the grads dictionary defined above.                         #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-            pass
+            self.params['W2'] -= learning_rate * grads['W2']
+            self.params['b2'] -= learning_rate * grads['b2']
+            self.params['W1'] -= learning_rate * grads['W1']
+            self.params['b1'] -= learning_rate * grads['b1']
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -217,8 +250,16 @@ class TwoLayerNet(object):
         # TODO: Implement this function; it should be VERY simple!                #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        layer1_scores =  X.dot(self.params['W1']) + self.params['b1']
+        layer1_outputs = np.maximum(0, layer1_scores)
+        layer2_scores = layer1_outputs.dot(self.params['W2']) + self.params['b2']
+        max_scores = np.max(layer2_scores, axis = 1).reshape(-1,1)
+        normalized_scores = layer2_scores - max_scores
+        softmax_scores = np.exp(normalized_scores) 
+        sum_scores =  np.sum(softmax_scores, axis = 1).reshape(-1,1)
+        softmax_scores /= sum_scores
 
-        pass
+        y_pred = np.argmax(softmax_scores, axis = 1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
