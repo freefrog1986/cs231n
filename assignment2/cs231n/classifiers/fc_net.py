@@ -202,11 +202,15 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
-        all_dim = [input_dim] + hidden_dims + [num_classes]
-        for i,dim in enumerate(all_dim):
-            self.params['W'+ str(i+1) ] = weight_scale * np.random.randn(dim, all_dim[i+1])
-            self.params['b'+ str(i+1)] = np.zeros(all_dim[i+1])
+
+        for i in range(self.num_layers):
+            in_dim = input_dim if i == 0 else hidden_dims[i-1]
+            out_dim = hidden_dims[i] if i < len(hidden_dims) else num_classes
+            self.params['W%d'%(i+1)] = weight_scale * np.random.randn(in_dim, out_dim)
+            self.params['b%d'%(i+1)] = np.zeros(out_dim)
+            if self.normalization == 'batchnorm' and (i != self.num_layers - 1):
+                self.params['gamma%d'%(i+1)] = np.ones(out_dim) 
+                self.params['beta%d'%(i+1)]  = np.zeros(out_dim)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -269,7 +273,24 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
+        # initialize first layer input
+        layer_input = X
+        fc_cache = {}
+        bn_cache = {}
+        rl_cache = {}
+        dp_cache = {}
+
+        for i in range(self.num_layers):
+            W, b = self.params['W%d'%(i+1)], self.params['b%d'%(i+1)]
+            layer_input, fc_cache[i+1] = affine_forward(layer_input, W, b) # affine
+            if (self.normalization == 'batchnorm') and (i != self.num_layers - 1):
+                gamma, beta = self.params['gamma%d'%(i+1)], self.params['beta%d'%(i+1)]
+                layer_input, bn_cache[i+1] = batchnorm_forward(layer_input, gamma, beta, self.bn_params[i]) # [batch/layer norm]
+            layer_input, rl_cache[i+1] = relu_forward(layer_input) # relu
+            if self.use_dropout:
+                layer_input, dp_cache[i+1] = dropout_forward(layer_input, self.dropout_param) # dropout
+        scores = layer_input
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -296,7 +317,29 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # last layer loss and derivative
+        data_loss, dscores = softmax_loss(scores, y)
+        reg_loss = 0
+        for layer in range(self.num_layers):
+            W = self.params['W%d' % (layer+1)]
+            reg_loss += np.sum(W**2)
+        reg_loss *= 0.5 * self.reg
+        loss = data_loss + reg_loss
+        dhout = dscores
+
+        for layer_index in range(self.num_layers, 0, -1):
+            if self.use_dropout:
+                dhout = dropout_backward(dhout ,dp_cache[layer_index])
+            dhout = relu_backward(dhout, rl_cache[layer_index])
+            if (self.normalization == 'batchnorm') and (layer_index != self.num_layers):
+                dhout, dgamma, dbeta = batchnorm_backward(dhout, bn_cache[layer_index])
+                grads['gamma%d'%(layer_index)] = dgamma
+                grads['beta%d'%(layer_index)]  = dbeta
+            dx, dw, db = affine_backward(dhout, fc_cache[layer_index])
+            layer_w = self.params['W%d'%(layer_index)]
+            grads['W%d'%(layer_index)] = dw + self.reg * layer_w
+            grads['b%d'%(layer_index)] = db  
+            dhout = np.dot(dhout, layer_w.T)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
