@@ -563,7 +563,29 @@ def conv_forward_naive(x, w, b, conv_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # padding
+    pad, stride = conv_param['pad'], conv_param['stride']
+    pad_x = np.pad(x, pad_width = ((0,), (0,),(pad,),(pad,)), mode = 'constant', constant_values = 0)
+
+    # initialize output
+    N, C, H, W    = x.shape
+    F, _, HH, WW  = w.shape
+    H_output = int(1 + (H + 2 * pad - HH) / stride)
+    W_output = int(1 + (W + 2 * pad - WW) / stride)
+    out = np.zeros((N, F, H_output, W_output))
+    # conv
+    for n in range(N):
+        n_sample = pad_x[n] # nth sample
+        for f in range(F):
+            f_filter = w[f] # fth filter
+            b_filter = b[f]
+            for h_pixel in range(H_output): # fill each pixel
+                h_start =  h_pixel * stride
+                h_end   =  h_pixel * stride + HH
+                for w_pixel in range(W_output): # fill each pixel
+                    w_start =  w_pixel * stride
+                    w_end   =  w_pixel * stride + WW
+                    out[n,f,h_pixel,w_pixel] = np.sum(n_sample[:, h_start:h_end, w_start:w_end] * f_filter) + b_filter # compute conv
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -591,13 +613,56 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    '''
+    - x: Input data of shape (N, C, H, W)
+    - w: Filter weights of shape (F, C, HH, WW)
+    - b: Biases, of shape (F,)
+    - conv_param: A dictionary with the following keys:
+    - 'stride': The number of pixels between adjacent receptive fields in the
+        horizontal and vertical directions.
+    - 'pad': The number of pixels that will be used to zero-pad the input. 
+    '''
 
-    pass
+    # extract parmas
+    x, w, b, conv_param = cache
+    pad, stride = conv_param['pad'], conv_param['stride']
+    N, C, H, W    = x.shape
+    F, _, HH, WW  = w.shape
+    H_output = int(1 + (H + 2 * pad - HH) / stride)
+    W_output = int(1 + (W + 2 * pad - WW) / stride)
 
-    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+    # padding
+    pad_x = np.pad(x, pad_width = ((0,), (0,),(pad,),(pad,)), mode = 'constant', constant_values = 0)
+    
+    # initialize output
+    dx     = np.zeros_like(x)
+    dpad_x = np.zeros_like(pad_x)
+    dw     = np.zeros_like(w)
+    db     = np.zeros_like(b)
+    # db
+    db = np.sum(dout, axis = (0,2,3))
+
+    # dw\dx
+    for h_pixel in range(H_output):
+        h_start =  h_pixel * stride
+        h_end   =  h_pixel * stride + HH
+        for w_pixel in range(W_output):
+            w_start  =  w_pixel * stride
+            w_end    =  w_pixel * stride + WW
+            x_sample = pad_x[:, :, h_start:h_end, w_start:w_end]
+            for f in range(F): 
+                dout_w = dout[:, f, h_pixel, w_pixel][:, None, None, None]
+                dw[f ,: ,: ,:] += np.sum(x_sample * dout_w, axis=0)
+            for n in range(N): 
+                dout_x = dout[n, :, h_pixel, w_pixel][:, None, None, None] 
+                dpad_x[n, :, h_start:h_end, w_start:w_end] += np.sum((w * dout_x), axis=0)
+    dx = dpad_x[:,:,pad:-pad,pad:-pad]
+
+    # # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    # ###########################################################################
+    # #                             END OF YOUR CODE                            #
+    # ###########################################################################
     return dx, dw, db
 
 
@@ -625,8 +690,25 @@ def max_pool_forward_naive(x, pool_param):
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    # extract parames
+    N, C, H, W = x.shape
+    pool_height, pool_width, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    H_output = int(1 + (H - pool_height) / stride)
+    W_output = int(1 + (W - pool_width)  / stride)
 
-    pass
+    # initialize output
+    out = np.zeros((N, C, H_output, W_output))
+
+    # pooling
+    for h in range(H_output):
+        h_start = h * stride
+        h_end   = h * stride + pool_height
+        for w in range(W_output):
+            w_start = w * stride
+            w_end   = w * stride + pool_width           
+            max_value = np.max(x[:,:,h_start:h_end, w_start:w_end], axis = (2,3)) 
+            out[:,:,h,w] = max_value 
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -653,8 +735,26 @@ def max_pool_backward_naive(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # extract params
+    x, pool_param = cache
+    N, C, H, W = x.shape
+    pool_height, pool_width, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    H_output = int(1 + (H - pool_height) / stride)
+    W_output = int(1 + (W - pool_width)  / stride)
+    
+    # initialize output
+    dx = np.zeros_like(x)
 
+    for h in range(H_output):
+        h_start = h * stride
+        h_end   = h * stride + pool_height
+        for w in range(W_output):
+            w_start = w * stride
+            w_end   = w * stride + pool_width  
+            sample_x = x[:,:,h_start:h_end, w_start:w_end]
+            max_value = np.max(sample_x, axis=(2,3))
+            mask = (sample_x == (max_value)[:,:,None,None])
+            dx[:,:,h_start:h_end, w_start:w_end] += mask * (dout[:,:,h,w])[:,:,None,None]
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
