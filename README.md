@@ -3,6 +3,8 @@ Stanford 2019 cs231n course assignments.
 
 ## milestone
 
+- 18-07-2019: Assignment2 Dropout done
+
 - 17-07-2019: Assignment2 BatchNormalization done
 
 - 17-07-2019: Assignment2 FullyConnectedNets done

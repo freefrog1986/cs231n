@@ -275,6 +275,7 @@ class FullyConnectedNet(object):
 
         # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
         # initialize first layer input
+        
         layer_input = X
         fc_cache = {}
         bn_cache = {}
