@@ -51,11 +51,21 @@ class ThreeLayerConvNet(object):
         # IMPORTANT: For this assignment, you can assume that the padding          #
         # and stride of the first convolutional layer are chosen so that           #
         # **the width and height of the input are preserved**. Take a look at      #
-        # the start of the loss() function to see how that happens.                #                           
+        # the start of the loss() function to see how that happens.                #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        C  = input_dim[0]
+        H  = input_dim[1]
+        W  = input_dim[2]
+        F  = num_filters
+        HH = filter_size
+        WW = filter_size
+        self.params['W1'] = np.random.normal(loc = 0, scale = weight_scale, size = (F, C, HH, WW))
+        self.params['b1'] = np.zeros(F)
+        self.params['W2'] = np.random.normal(loc = 0, scale = weight_scale, size = (int(0.5*H*0.5*W*num_filters), hidden_dim))
+        self.params['b2'] = np.zeros(hidden_dim)
+        self.params['W3'] = np.random.normal(loc = 0, scale = weight_scale, size = (hidden_dim, num_classes))
+        self.params['b3'] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -95,8 +105,13 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        conv_out, conv_cache = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
+        a1, a1_cache = affine_relu_forward(conv_out, W2, b2)
+        a2, a2_cache = affine_forward(a1, W3, b3)
+        shifted_logits = a2 - np.max(a2, axis=1, keepdims=True)
+        Z = np.sum(np.exp(shifted_logits), axis=1, keepdims=True)
+        log_probs = shifted_logits - np.log(Z)
+        scores = np.exp(log_probs)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -118,8 +133,14 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        data_loss, dout = softmax_loss(a2, y)
+        reg_loss = 0.5 * self.reg * (np.sum(W1 ** 2) + np.sum(W2 ** 2) + np.sum(W3 ** 2))
+        loss = data_loss + reg_loss
 
+        dout, grads['W3'], grads['b3'] = affine_backward(dout, a2_cache)
+        dout, grads['W2'], grads['b2'] = affine_relu_backward(dout, a1_cache)
+        dout, grads['W1'], grads['b1'] = conv_relu_pool_backward(dout, conv_cache)
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #

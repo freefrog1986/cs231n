@@ -12,7 +12,6 @@ except ImportError:
 
 from cs231n.im2col import *
 
-
 def conv_forward_im2col(x, w, b, conv_param):
     """
     A fast implementation of the forward pass for a convolutional layer
@@ -40,7 +39,6 @@ def conv_forward_im2col(x, w, b, conv_param):
 
     cache = (x, w, b, conv_param, x_cols)
     return out, cache
-
 
 def conv_forward_pytorch(x, w, b, conv_param):
     N, C, H, W = x.shape
@@ -105,7 +103,6 @@ def conv_forward_strides(x, w, b, conv_param):
     cache = (x, w, b, conv_param, x_cols)
     return out, cache
 
-
 def conv_backward_strides(dout, cache):
     x, w, b, conv_param, x_cols = cache
     stride, pad = conv_param['stride'], conv_param['pad']
@@ -124,7 +121,6 @@ def conv_backward_strides(dout, cache):
     dx = col2im_6d_cython(dx_cols, N, C, H, W, HH, WW, pad, stride)
 
     return dx, dw, db
-
 
 def conv_backward_im2col(dout, cache):
     """
@@ -147,10 +143,8 @@ def conv_backward_im2col(dout, cache):
 
     return dx, dw, db
 
-
 conv_forward_fast = conv_forward_strides
 conv_backward_fast = conv_backward_strides
-
 
 def max_pool_forward_fast(x, pool_param):
     """
@@ -175,7 +169,6 @@ def max_pool_forward_fast(x, pool_param):
         cache = ('im2col', im2col_cache)
     return out, cache
 
-
 def max_pool_backward_fast(dout, cache):
     """
     A fast implementation of the backward pass for a max pooling layer.
@@ -190,7 +183,6 @@ def max_pool_backward_fast(dout, cache):
         return max_pool_backward_im2col(dout, real_cache)
     else:
         raise ValueError('Unrecognized method "%s"' % method)
-
 
 def max_pool_forward_reshape(x, pool_param):
     """
@@ -211,7 +203,6 @@ def max_pool_forward_reshape(x, pool_param):
 
     cache = (x, x_reshaped, out)
     return out, cache
-
 
 def max_pool_backward_reshape(dout, cache):
     """
@@ -243,7 +234,6 @@ def max_pool_backward_reshape(dout, cache):
 
     return dx
 
-
 def max_pool_forward_im2col(x, pool_param):
     """
     An implementation of the forward pass for max pooling based on im2col.
@@ -269,7 +259,6 @@ def max_pool_forward_im2col(x, pool_param):
 
     cache = (x, x_cols, x_cols_argmax, pool_param)
     return out, cache
-
 
 def max_pool_backward_im2col(dout, cache):
     """

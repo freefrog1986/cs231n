@@ -1,7 +1,6 @@
 from builtins import range
 import numpy as np
 
-
 def affine_forward(x, w, b):
     """
     Computes the forward pass for an affine (fully-connected) layer.
@@ -37,7 +36,6 @@ def affine_forward(x, w, b):
     ###########################################################################
     cache = (x, w, b)
     return out, cache
-
 
 def affine_backward(dout, cache):
     """
@@ -75,7 +73,6 @@ def affine_backward(dout, cache):
     ###########################################################################
     return dx, dw, db
 
-
 def relu_forward(x):
     """
     Computes the forward pass for a layer of rectified linear units (ReLUs).
@@ -102,7 +99,6 @@ def relu_forward(x):
     cache = x
     return out, cache
 
-
 def relu_backward(dout, cache):
     """
     Computes the backward pass for a layer of rectified linear units (ReLUs).
@@ -127,7 +123,6 @@ def relu_backward(dout, cache):
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return dx
-
 
 def batchnorm_forward(x, gamma, beta, bn_param):
     """
@@ -237,7 +232,6 @@ def batchnorm_forward(x, gamma, beta, bn_param):
 
     return out, cache
 
-
 def batchnorm_backward(dout, cache):
     """
     Backward pass for batch normalization.
@@ -291,7 +285,6 @@ def batchnorm_backward(dout, cache):
 
     return dx, dgamma, dbeta
 
-
 def batchnorm_backward_alt(dout, cache):
     """
     Alternative backward pass for batch normalization.
@@ -332,7 +325,6 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
 
     return dx, dgamma, dbeta
-
 
 def layernorm_forward(x, gamma, beta, ln_param):
     """
@@ -383,7 +375,6 @@ def layernorm_forward(x, gamma, beta, ln_param):
     ###########################################################################
     return out, cache
 
-
 def layernorm_backward(dout, cache):
     """
     Backward pass for layer normalization.
@@ -430,7 +421,6 @@ def layernorm_backward(dout, cache):
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return dx, dgamma, dbeta
-
 
 def dropout_forward(x, dropout_param):
     """
@@ -498,7 +488,6 @@ def dropout_forward(x, dropout_param):
 
     return out, cache
 
-
 def dropout_backward(dout, cache):
     """
     Perform the backward pass for (inverted) dropout.
@@ -526,7 +515,6 @@ def dropout_backward(dout, cache):
     elif mode == 'test':
         dx = dout
     return dx
-
 
 def conv_forward_naive(x, w, b, conv_param):
     """
@@ -593,7 +581,6 @@ def conv_forward_naive(x, w, b, conv_param):
     ###########################################################################
     cache = (x, w, b, conv_param)
     return out, cache
-
 
 def conv_backward_naive(dout, cache):
     """
@@ -665,7 +652,6 @@ def conv_backward_naive(dout, cache):
     # ###########################################################################
     return dx, dw, db
 
-
 def max_pool_forward_naive(x, pool_param):
     """
     A naive implementation of the forward pass for a max-pooling layer.
@@ -717,7 +703,6 @@ def max_pool_forward_naive(x, pool_param):
     cache = (x, pool_param)
     return out, cache
 
-
 def max_pool_backward_naive(dout, cache):
     """
     A naive implementation of the backward pass for a max-pooling layer.
@@ -761,7 +746,6 @@ def max_pool_backward_naive(dout, cache):
     ###########################################################################
     return dx
 
-
 def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     """
     Computes the forward pass for spatial batch normalization.
@@ -804,7 +788,6 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
 
     return out, cache
 
-
 def spatial_batchnorm_backward(dout, cache):
     """
     Computes the backward pass for spatial batch normalization.
@@ -837,7 +820,6 @@ def spatial_batchnorm_backward(dout, cache):
     ###########################################################################
 
     return dx, dgamma, dbeta
-
 
 def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     """
@@ -877,7 +859,6 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     ###########################################################################
     return out, cache
 
-
 def spatial_groupnorm_backward(dout, cache):
     """
     Computes the backward pass for spatial group normalization.
@@ -907,7 +888,6 @@ def spatial_groupnorm_backward(dout, cache):
     ###########################################################################
     return dx, dgamma, dbeta
 
-
 def svm_loss(x, y):
     """
     Computes the loss and gradient using for multiclass SVM classification.
@@ -933,7 +913,6 @@ def svm_loss(x, y):
     dx[np.arange(N), y] -= num_pos
     dx /= N
     return loss, dx
-
 
 def softmax_loss(x, y):
     """
