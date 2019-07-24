@@ -3,6 +3,8 @@ Stanford 2019 cs231n course assignments.
 
 ## milestone
 
+- 24-07-2019: Assignment2 Pytorch done.
+
 - 24-07-2019: Assignment2 Convolutional Networks done.
 
 - 18-07-2019: Assignment2 Dropout done.
