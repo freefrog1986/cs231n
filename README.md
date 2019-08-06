@@ -2,6 +2,7 @@
 Stanford 2019 cs231n course assignments.
 
 ## milestone
+- 06-08-2019: Assignment2 Tensorflow done.
 
 - 24-07-2019: Assignment2 Pytorch done.
 
