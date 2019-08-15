@@ -142,7 +142,30 @@ class CaptioningRNN(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # (1)
+        h0, aff_cache = affine_forward(features, W_proj, b_proj)
+        
+        # (2)
+        x, emb_cache = word_embedding_forward(captions_in, W_embed)
+
+        # (3)
+        if self.cell_type == 'rnn':
+            h, rnn_cache = rnn_forward(x, h0, Wx, Wh, b)
+        else:
+            pass
+
+        # (4)
+        scores, tem_cache = temporal_affine_forward(h, W_vocab, b_vocab)
+
+        # (5)
+        loss, dout = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
+
+        # backward
+        dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dout, tem_cache)
+        dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, rnn_cache)
+        grads['W_embed'] = word_embedding_backward(dx, emb_cache)
+        _, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, aff_cache)
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -211,7 +234,23 @@ class CaptioningRNN(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        prev_h, _ = affine_forward(features, W_proj, b_proj)
+        word_idx = [self._start]*N
+        for t in range(max_length):
+            # (1)
+            x = W_embed[[word_idx]]
+
+            # (2)
+            if self.cell_type == 'rnn':
+                next_h, _ = rnn_step_forward(x, prev_h, Wx, Wh, b)
+            else:
+                pass
+            # (3)
+            scores, _ = affine_forward(next_h, W_vocab, b_vocab)
+            # (4)
+            captions[:,t] = list(np.argmax(scores, axis = 1))
+            word_idx = captions[:,t]
+            prev_h = next_h 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
