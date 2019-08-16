@@ -3,6 +3,8 @@ Stanford 2019 cs231n course assignments.
 
 ## milestone
 
+- 16-08-2019: Assignment3 LSTM done.
+
 - 15-08-2019: Assignment3 RNN done.
 
 - 06-08-2019: Assignment2 Tensorflow done.

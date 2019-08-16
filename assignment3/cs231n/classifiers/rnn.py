@@ -151,8 +151,10 @@ class CaptioningRNN(object):
         # (3)
         if self.cell_type == 'rnn':
             h, rnn_cache = rnn_forward(x, h0, Wx, Wh, b)
+        elif self.cell_type == 'lstm':
+            h, lstm_cache = lstm_forward(x, h0, Wx, Wh, b)
         else:
-            pass
+            raise Exception('Cell type wrong')
 
         # (4)
         scores, tem_cache = temporal_affine_forward(h, W_vocab, b_vocab)
@@ -162,7 +164,13 @@ class CaptioningRNN(object):
 
         # backward
         dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dout, tem_cache)
-        dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, rnn_cache)
+        if self.cell_type == 'rnn':
+            dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, rnn_cache)
+        elif self.cell_type == 'lstm':
+            dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dh, lstm_cache)
+        else:
+            raise Exception('Cell type wrong')
+
         grads['W_embed'] = word_embedding_backward(dx, emb_cache)
         _, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, aff_cache)
 
@@ -236,6 +244,8 @@ class CaptioningRNN(object):
 
         prev_h, _ = affine_forward(features, W_proj, b_proj)
         word_idx = [self._start]*N
+        next_h = np.zeros_like(prev_h)
+        prev_c = np.zeros_like(prev_h)
         for t in range(max_length):
             # (1)
             x = W_embed[[word_idx]]
@@ -243,14 +253,17 @@ class CaptioningRNN(object):
             # (2)
             if self.cell_type == 'rnn':
                 next_h, _ = rnn_step_forward(x, prev_h, Wx, Wh, b)
+            elif self.cell_type == 'lstm':
+                next_h, next_c, _ = lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b)
             else:
-                pass
+                raise Exception('Cell type wrong')
             # (3)
             scores, _ = affine_forward(next_h, W_vocab, b_vocab)
             # (4)
             captions[:,t] = list(np.argmax(scores, axis = 1))
             word_idx = captions[:,t]
             prev_h = next_h 
+            prev_c = next_c
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
