@@ -3,6 +3,8 @@ Stanford 2019 cs231n course assignments.
 
 ## milestone
 
+- 20-08-2019: Assignment3 GAN done.
+
 - 19-08-2019: Assignment3 Visualization & style transfer done.
 
 - 16-08-2019: Assignment3 LSTM done.
